@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans+TC:wght@100..900&display=swap');
+
+:root {
+  /* Ultra-Premium Deep Night Palette 2.0 */
+  --c-bg: #020617;
+  /* Slate 950 base */
+  --c-gold: #F59E0B;
+  /* Amber 500 */
+  --c-gold-deep: #D97706;
+  --c-accent: #E11D48;
+  /* Rose 600 */
+  --c-surface: rgba(15, 23, 42, 0.7);
+  /* Slate 900 glass */
+  --c-glass: rgba(255, 255, 255, 0.03);
+  --c-text-h: #F8FAFC;
+  /* Slate 50 */
+  --c-text-p: rgba(248, 250, 252, 0.6);
+  --c-border: rgba(245, 158, 11, 0.15);
+  --c-glow: rgba(245, 158, 11, 0.1);
+
+  --f-serif: "Bodoni Moda", "Noto Sans TC", serif;
+  --f-sans: "Inter", "Noto Sans TC", sans-serif;
+
+  --glass-blur: blur(25px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--c-bg);
+  color: var(--c-text-h);
+  font-family: var(--f-sans);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* --- 進階動態背景 --- */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.bg-blob {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(23, 37, 84, 0.3) 0%, rgba(2, 6, 23, 0) 70%);
+  filter: blur(80px);
+  animation: blob-move 25s infinite alternate ease-in-out;
+}
+
+.bg-blob:nth-child(2) {
+  background: radial-gradient(circle, rgba(120, 10, 30, 0.15) 0%, rgba(2, 6, 23, 0) 70%);
+  animation-duration: 35s;
+  animation-delay: -5s;
+}
+
+@keyframes blob-move {
+  0% {
+    transform: translate(-20%, -20%) scale(1);
+  }
+
+  50% {
+    transform: translate(40%, 20%) scale(1.2);
+  }
+
+  100% {
+    transform: translate(-10%, 60%) scale(0.9);
+  }
+}
+
+/* --- 文字美學 --- */
+.gradient-text {
+  background: linear-gradient(to right, #FFF, var(--c-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--f-serif);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* --- 通用奢華組件 --- */
+.glass {
+  background: var(--c-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.btn-luxury {
+  background: linear-gradient(135deg, var(--c-gold) 0%, var(--c-gold-deep) 100%);
+  color: #000;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 999px;
+  font-family: var(--f-sans);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+}
+
+.btn-luxury:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 20px 35px -8px rgba(245, 158, 11, 0.4);
+}
+
+.btn-luxury:active {
+  transform: translateY(0);
+}
+
+.btn-luxury:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.star-badge {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--c-gold);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.85rem;
+}

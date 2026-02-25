@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>餐廳命運轉盤 - 解決選擇障礙</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="./src/main.jsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        // 在本地開發環境中，我們會主動解除舊的、可能衝突的 Service Worker
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+              registration.unregister();
+              console.log('[SW] 已解除本地衝突的 Service Worker');
+            }
+          });
+        } else {
+          // 正式環境註冊
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('[SW] 註冊成功:', reg.scope))
+            .catch(err => console.log('[SW] 註冊失敗:', err));
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

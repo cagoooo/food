@@ -1,0 +1,505 @@
+.app-viewport {
+  position: relative;
+  min-height: 100vh;
+  padding: 40px 20px 120px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* --- Bento Grid 系統 --- */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.cell-header {
+  grid-column: span 12;
+  text-align: center;
+  padding: 60px 0;
+}
+
+.title-display {
+  font-size: clamp(3rem, 8vw, 5rem);
+  line-height: 1;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+.action-strip {
+  grid-column: span 12;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cell-side {
+  grid-column: span 3;
+  padding: 30px;
+  border-radius: 32px;
+  position: sticky;
+  top: 40px;
+}
+
+.cell-main {
+  grid-column: span 9;
+  min-height: 600px;
+  padding: 50px;
+  border-radius: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+  /* 允許轉盤陰影溢出 */
+}
+
+.cell-main.full-width {
+  grid-column: span 12;
+}
+
+/* --- SVG 轉盤系統 (Ultra Precision) --- */
+.wheel-stage {
+  position: relative;
+  width: min(85vw, 600px);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wheel-svg-container {
+  width: 100%;
+  height: 100%;
+  transition: transform 6s cubic-bezier(0.15, 0, 0.15, 1);
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.8));
+}
+
+.wheel-indicator-svg {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  filter: drop-shadow(0 0 15px var(--c-gold));
+}
+
+.wheel-center-decoration {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, var(--c-gold) 0%, #000 100%);
+  border-radius: 50%;
+  z-index: 5;
+  border: 4px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+}
+
+/* --- 列表美學 --- */
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.premium-card {
+  padding: 24px;
+  border-radius: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: scale(1.02);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+/* --- 浮動導航列 --- */
+.floating-dock {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 100px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.1);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-dock:hover {
+  transform: translateX(-50%) scale(1.02);
+}
+
+.dock-item {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 12px 24px;
+  border-radius: 100px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.dock-item.active {
+  background: var(--c-gold);
+  color: #000;
+}
+
+/* --- 結果彈窗樣式 --- */
+.result-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1500;
+  backdrop-filter: blur(10px);
+}
+
+/* 使用 flexbox 容器確保置中，因 Framer Motion 會覆蓋 transform */
+.result-modal-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.result-modal {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 40px 30px;
+  border-radius: 32px;
+  text-align: center;
+  width: min(90vw, 450px);
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 2px solid var(--c-gold);
+  box-shadow: 0 25px 80px rgba(245, 158, 11, 0.3);
+  perspective: 1000px;
+  /* 為 3D 效果準備 */
+}
+
+/* --- 3D 豪華卡片效果 --- */
+.restaurant-3d-card {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
+}
+
+.restaurant-3d-card__inner {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border-radius: 24px;
+  padding: 30px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.restaurant-3d-card__shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at var(--shine-x, 50%) var(--shine-y, 50%), rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.restaurant-3d-card__content {
+  transform: translateZ(50px);
+  /* 內容浮出感 */
+  z-index: 3;
+}
+
+.btn-luxury:active {
+  transform: scale(0.95);
+  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.2);
+}
+
+.result-modal__label {
+  color: var(--c-gold);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2rem;
+  margin-bottom: 16px;
+  font-size: 0.7rem;
+}
+
+.result-modal__title {
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  margin-bottom: 20px;
+  word-break: break-word;
+  line-height: 1.3;
+  color: #fff;
+}
+
+.result-modal__badges {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.result-modal__address {
+  opacity: 0.6;
+  font-size: 0.9rem;
+  margin-bottom: 32px;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.result-modal__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.result-modal__actions .btn-luxury {
+  padding: 16px 24px;
+  font-size: 1rem;
+}
+
+.result-modal__actions .btn-secondary {
+  background: transparent;
+  border: 2px solid var(--c-gold);
+  color: var(--c-gold);
+  padding: 16px 24px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.result-modal__actions .btn-secondary:hover {
+  background: var(--c-gold);
+  color: #000;
+}
+
+/* --- 手機適配 --- */
+@media (max-width: 1024px) {
+  .cell-side {
+    grid-column: span 12;
+    position: static;
+  }
+
+  .cell-main {
+    grid-column: span 12;
+    padding: 30px 15px;
+  }
+
+  .bento-grid {
+    gap: 16px;
+  }
+
+  .title-display {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-viewport {
+    padding: 20px 15px 100px;
+  }
+
+  .wheel-stage {
+    width: 95vw;
+  }
+
+  .btn-luxury {
+    width: 100%;
+  }
+
+  /* 結果彈窗手機版 */
+  .result-modal {
+    width: 95vw;
+    padding: 30px 20px;
+    border-radius: 24px;
+  }
+
+  .result-modal__title {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .result-modal__actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .result-modal__actions .btn-luxury,
+  .result-modal__actions button {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  /* 底部導航列手機版 */
+  .floating-dock {
+    bottom: 15px;
+    padding: 6px;
+    gap: 4px;
+    width: calc(100vw - 30px);
+    justify-content: center;
+  }
+
+  .dock-item {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+
+  .dock-item svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* 頂部導航手機版 */
+  .top-nav {
+    padding: 0 15px;
+  }
+
+  .nav-title span {
+    font-size: 1rem;
+  }
+}
+
+/* --- Landing Page 佈局 --- */
+.landing-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.landing-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.landing-title {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  margin-top: 10px;
+  letter-spacing: 0.1rem;
+}
+
+.landing-subtitle {
+  opacity: 0.6;
+  font-size: 1.1rem;
+  letter-spacing: 0.2rem;
+  margin-top: 10px;
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.landing-card {
+  padding: 40px;
+  border-radius: 40px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.landing-card__icon {
+  margin-bottom: 24px;
+  color: var(--c-gold);
+}
+
+.landing-card__content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #fff;
+}
+
+.landing-card__content p {
+  opacity: 0.6;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.landing-card__action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--c-gold);
+}
+
+.landing-card__badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.landing-card__badge.primary {
+  background: var(--c-gold);
+  color: #000;
+  opacity: 1;
+}
+
+.landing-footer {
+  margin-top: 60px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  transition: all 0.3s ease;
+}
+
+.landing-footer a:hover {
+  opacity: 1;
+  color: var(--c-gold) !important;
+  transform: translateY(-2px);
+}
+
+/* 手機版 Landing Page 微調 */
+@media (max-width: 640px) {
+  .landing-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .landing-card {
+    padding: 30px;
+  }
+}
