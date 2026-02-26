@@ -408,91 +408,102 @@ const RestaurantSpinWheel = ({
                                     cursor: 'pointer',
                                 }}
                             />
-                            {/* 結果卡片 - 獨立 fixed，完全無干擾 */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                                onClick={(e) => e.stopPropagation()}
+                            {/* ✅ 靜態 wrapper 負責置中，避免 Framer Motion 動畫覆蓋 transform */}
+                            <div
                                 style={{
                                     position: 'fixed',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)',
+                                    top: 0, left: 0, right: 0, bottom: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
                                     zIndex: 9999,
-                                    width: '90%',
-                                    maxWidth: '400px',
-                                    background: 'linear-gradient(135deg, rgba(30,41,59,0.97), rgba(15,23,42,0.99))',
-                                    borderRadius: '24px',
-                                    border: '1px solid rgba(245,158,11,0.3)',
-                                    boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-                                    padding: '32px 28px',
-                                    textAlign: 'center',
-                                    pointerEvents: 'auto',
+                                    pointerEvents: 'none',
+                                    padding: '20px',
+                                    boxSizing: 'border-box',
                                 }}
                             >
-                                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🎉</div>
-                                <p style={{ color: 'var(--c-gold)', fontWeight: 800, fontSize: '0.7rem', letterSpacing: '0.2rem', textTransform: 'uppercase', marginBottom: '10px' }}>命運之巔</p>
-                                <h3 style={{ fontSize: 'clamp(1.3rem,5vw,1.8rem)', color: '#fff', marginBottom: '16px', lineHeight: 1.3, wordBreak: 'break-word' }}>
-                                    {result.name}
-                                </h3>
+                                {/* motion.div 只負責縮放/淡入動畫，不用 y 以免衝突 transform */}
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.8 }}
+                                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                        width: '100%',
+                                        maxWidth: '400px',
+                                        background: 'linear-gradient(135deg, rgba(30,41,59,0.97), rgba(15,23,42,0.99))',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(245,158,11,0.3)',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                                        padding: '32px 28px',
+                                        textAlign: 'center',
+                                        pointerEvents: 'auto',
+                                        boxSizing: 'border-box',
+                                    }}
+                                >
+                                    <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🎉</div>
+                                    <p style={{ color: 'var(--c-gold)', fontWeight: 800, fontSize: '0.7rem', letterSpacing: '0.2rem', textTransform: 'uppercase', marginBottom: '10px' }}>命運之巔</p>
+                                    <h3 style={{ fontSize: 'clamp(1.3rem,5vw,1.8rem)', color: '#fff', marginBottom: '16px', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                                        {result.name}
+                                    </h3>
 
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                                    <span className="star-badge">★ {result.rating || '?'}</span>
-                                    {result.open !== undefined && (
-                                        <span className={`status-badge ${result.open ? 'open' : 'closed'}`}>
-                                            {result.open ? '營業中' : '已打烊'}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {result.address && (
-                                    <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.7, fontSize: '0.9rem', marginBottom: '24px' }}>
-                                        <MapPin size={14} />
-                                        {result.address}
-                                    </p>
-                                )}
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <button
-                                        className="btn-luxury"
-                                        onClick={() => onNavigate && onNavigate(result)}
-                                        style={{ pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
-                                    >
-                                        <Navigation size={18} />
-                                        導航前往
-                                    </button>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px' }}>
-                                        <button
-                                            className="btn-secondary"
-                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minHeight: '48px', pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
-                                            onClick={() => {
-                                                if ('vibrate' in navigator) navigator.vibrate(10)
-                                                setShowResult(false)
-                                                setTimeout(spin, 300)
-                                            }}
-                                        >
-                                            <RefreshCw size={18} />
-                                            再轉一次
-                                        </button>
-                                        <button
-                                            className={`btn-icon ${isFavorite ? 'favorited' : ''}`}
-                                            style={{ pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
-                                            onClick={() => {
-                                                if ('vibrate' in navigator) navigator.vibrate(10)
-                                                onToggleFavorite && onToggleFavorite(result)
-                                            }}
-                                        >
-                                            <Heart
-                                                size={20}
-                                                fill={isFavorite ? 'var(--c-gold)' : 'none'}
-                                                color={isFavorite ? 'var(--c-gold)' : 'white'}
-                                            />
-                                        </button>
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                                        <span className="star-badge">★ {result.rating || '?'}</span>
+                                        {result.open !== undefined && (
+                                            <span className={`status-badge ${result.open ? 'open' : 'closed'}`}>
+                                                {result.open ? '營業中' : '已打烊'}
+                                            </span>
+                                        )}
                                     </div>
-                                </div>
-                            </motion.div>
+
+                                    {result.address && (
+                                        <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', opacity: 0.7, fontSize: '0.9rem', marginBottom: '24px' }}>
+                                            <MapPin size={14} />
+                                            {result.address}
+                                        </p>
+                                    )}
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <button
+                                            className="btn-luxury"
+                                            onClick={() => onNavigate && onNavigate(result)}
+                                            style={{ pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
+                                        >
+                                            <Navigation size={18} />
+                                            導航前往
+                                        </button>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px' }}>
+                                            <button
+                                                className="btn-secondary"
+                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', minHeight: '48px', pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
+                                                onClick={() => {
+                                                    if ('vibrate' in navigator) navigator.vibrate(10)
+                                                    setShowResult(false)
+                                                    setTimeout(spin, 300)
+                                                }}
+                                            >
+                                                <RefreshCw size={18} />
+                                                再轉一次
+                                            </button>
+                                            <button
+                                                className={`btn-icon ${isFavorite ? 'favorited' : ''}`}
+                                                style={{ pointerEvents: 'auto', position: 'relative', zIndex: 1 }}
+                                                onClick={() => {
+                                                    if ('vibrate' in navigator) navigator.vibrate(10)
+                                                    onToggleFavorite && onToggleFavorite(result)
+                                                }}
+                                            >
+                                                <Heart
+                                                    size={20}
+                                                    fill={isFavorite ? 'var(--c-gold)' : 'none'}
+                                                    color={isFavorite ? 'var(--c-gold)' : 'white'}
+                                                />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
                         </>
                     )}
                 </AnimatePresence>,
