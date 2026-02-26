@@ -2187,6 +2187,16 @@
     pointer-events: auto;
 }
 
+/* ✅ 修復：wrapper 設為 pointer-events:none 後，內層卡片容器必須明確恢復 */
+.wheel-result-modal-container {
+    pointer-events: auto;
+}
+
+.restaurant-3d-card {
+    pointer-events: auto;
+    cursor: default;
+}
+
 .result-confetti {
     font-size: 4rem;
     margin-bottom: 16px;
