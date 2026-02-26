@@ -24,7 +24,9 @@ self.addEventListener('fetch', (event) => {
     // 如果是本地開發資源或非 GET 請求，直接跳過快取
     if (
         event.request.method !== 'GET' ||
-        EXCLUDE_URLS.some(path => url.pathname.includes(path)) ||
+        // ✅ 只快取 http / https 請求，排除 chrome-extension:// 等 scheme
+        !event.request.url.startsWith('http') ||
+        EXCLUDE_URLS.some(path => event.request.url.includes(path)) ||
         url.hostname === 'localhost' ||
         url.hostname === '127.0.0.1'
     ) {
