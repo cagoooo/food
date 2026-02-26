@@ -394,22 +394,31 @@ const RestaurantSpinWheel = ({
                 <AnimatePresence>
                     {showResult && result && (
                         <>
+                            {/* 背景遮罩 - 點擊關閉 */}
                             <motion.div
                                 className="wheel-result-overlay"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setShowResult(false)}
+                                style={{ cursor: 'pointer' }}
                             />
-                            <div className="wheel-result-wrapper">
+                            {/* 卡片容器 - pointer-events: auto，不攔截 overlay 點擊 */}
+                            <div
+                                className="wheel-result-wrapper"
+                                style={{ pointerEvents: 'none' }}
+                            >
                                 <motion.div
                                     className="wheel-result-modal-container"
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.8 }}
+                                    style={{ pointerEvents: 'auto' }}
+                                    onClick={(e) => e.stopPropagation()}
                                 >
                                     <div
                                         className="restaurant-3d-card"
+                                        style={{ pointerEvents: 'auto' }}
                                         onMouseMove={(e) => {
                                             const card = e.currentTarget;
                                             const rect = card.getBoundingClientRect();

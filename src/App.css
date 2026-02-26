@@ -229,9 +229,13 @@
 }
 
 .restaurant-3d-card__content {
+  position: relative;
+  /* ✅ 必須設為 relative，z-index 才會生效 */
   transform: translateZ(50px);
   /* 內容浮出感 */
   z-index: 3;
+  pointer-events: auto;
+  /* ✅ 確保內部按鈕可點擊 */
 }
 
 .btn-luxury:active {
