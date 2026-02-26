@@ -301,13 +301,25 @@ const RestaurantSpinWheel = ({
                     }
                 }
 
-                // 發射彩帶
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
+                // 發射彩帶 - 左右對稱雙重噴射
+                const confettiDefaults = {
+                    particleCount: 80,
+                    spread: 60,
                     origin: { y: 0.6 },
-                    colors: ['#F59E0B', '#FAF9F6', '#E11D48']
-                })
+                    colors: ['#F59E0B', '#FAF9F6', '#E11D48'],
+                    zIndex: 10000 // 確保在彈窗上方
+                };
+
+                confetti({
+                    ...confettiDefaults,
+                    angle: 60,
+                    origin: { x: 0, y: 0.6 }
+                });
+                confetti({
+                    ...confettiDefaults,
+                    angle: 120,
+                    origin: { x: 1, y: 0.6 }
+                });
 
                 // 震動回饋
                 if ('vibrate' in navigator) {
