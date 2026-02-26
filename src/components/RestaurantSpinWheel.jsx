@@ -23,6 +23,10 @@ const RestaurantSpinWheel = ({
     favorites = [],
     loading = false
 }) => {
+    const containerRef = useRef(null)
+    const prevLoadingRef = useRef(loading)
+    const [refreshKey, setRefreshKey] = useState(0)
+
     const canvasRef = useRef(null)
     const [spinning, setSpinning] = useState(false)
     const [result, setResult] = useState(null)
@@ -35,8 +39,21 @@ const RestaurantSpinWheel = ({
     const tickSoundRef = useRef(null)
     const winSoundRef = useRef(null)
 
-    // 限制顯示數量
     const displayItems = restaurants.slice(0, 12)
+
+    // 監聽 loading 狀態變化，當 loading 結束且有餐廳資料時，自動滾動並觸發淡入動畫
+    useEffect(() => {
+        if (prevLoadingRef.current && !loading && restaurants.length > 0) {
+            setRefreshKey(prev => prev + 1)
+            // 給予 DOM 一點時間渲染再滾動
+            setTimeout(() => {
+                if (containerRef.current) {
+                    containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+            }, 100)
+        }
+        prevLoadingRef.current = loading
+    }, [loading, restaurants.length])
 
     // 初始化音效
     useEffect(() => {
@@ -322,7 +339,14 @@ const RestaurantSpinWheel = ({
             </div>
 
             {displayItems.length > 0 ? (
-                <div className="wheel-container">
+                <motion.div
+                    key={refreshKey}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="wheel-container"
+                    ref={containerRef}
+                >
                     {/* 指針 */}
                     <div className="wheel-pointer">
                         <svg width="40" height="50" viewBox="0 0 40 50">
@@ -371,7 +395,7 @@ const RestaurantSpinWheel = ({
                             </>
                         )}
                     </motion.button>
-                </div>
+                </motion.div>
             ) : (
                 <div className="wheel-empty">
                     <motion.div
