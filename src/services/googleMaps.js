@@ -54,15 +54,29 @@ export const fetchNearbyRestaurants = async ({ lat, lng, radius, minRating }) =>
     }
 
     try {
-        const { places } = await Place.searchNearby(request)
+        let places, lastErr
+        // ✅ 最多重試 2 次，應對 Google INTERNAL 500 暫時性錯誤
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                const result = await Place.searchNearby(request)
+                places = result.places
+                break
+            } catch (e) {
+                lastErr = e
+                if (attempt < 2) {
+                    console.warn(`[Places] 第 ${attempt} 次請求失敗，1.5 秒後重試...`, e.message)
+                    await new Promise(r => setTimeout(r, 1500))
+                }
+            }
+        }
+        if (!places) throw lastErr
 
-        if (!places || places.length === 0) return []
+        if (places.length === 0) return []
 
         return places
             .map(place => {
-                let isOpen = true; // 預設為開啟以避免誤刪
+                let isOpen = true;
                 try {
-                    // 優先檢查 Place 物件是否有 isOpen 方法，或檢查 regularOpeningHours
                     if (place.regularOpeningHours) {
                         isOpen = typeof place.regularOpeningHours.openNow === 'function'
                             ? place.regularOpeningHours.openNow()
@@ -84,6 +98,7 @@ export const fetchNearbyRestaurants = async ({ lat, lng, radius, minRating }) =>
                 }
             })
             .filter(place => place.rating >= minRating)
+
     } catch (err) {
         console.error("searchNearby 失敗:", err)
         if (err.status === 'PERMISSION_DENIED' || err.message?.includes('PERMISSION_DENIED')) {

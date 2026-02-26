@@ -348,41 +348,46 @@ function App() {
 
         {/* 主要內容區域 */}
         <div style={{ paddingTop: '70px' }}>
+          {/* ✅ AnimatePresence mode=wait 只能有一個直接子元素，Suspense 移到各 motion.div 內 */}
           <AnimatePresence mode="wait">
-            <React.Suspense fallback={<LoadingFallback />}>
-              {appMode === 'order' && user && (
-                <motion.div
-                  key="order"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+            {appMode === 'order' && user && (
+              <motion.div
+                key="order"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <React.Suspense fallback={<LoadingFallback />}>
                   <OrderPage user={user} />
-                </motion.div>
-              )}
+                </React.Suspense>
+              </motion.div>
+            )}
 
-              {appMode === 'menu' && user?.isAdmin && (
-                <motion.div
-                  key="menu"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+            {appMode === 'menu' && user?.isAdmin && (
+              <motion.div
+                key="menu"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <React.Suspense fallback={<LoadingFallback />}>
                   <MenuManager />
-                </motion.div>
-              )}
+                </React.Suspense>
+              </motion.div>
+            )}
 
-              {appMode === 'admin' && user?.isAdmin && (
-                <motion.div
-                  key="admin"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
+            {appMode === 'admin' && user?.isAdmin && (
+              <motion.div
+                key="admin"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <React.Suspense fallback={<LoadingFallback />}>
                   <AdminDashboard />
-                </motion.div>
-              )}
-            </React.Suspense>
+                </React.Suspense>
+              </motion.div>
+            )}
 
             {appMode === 'wheel' && (
               <motion.div
