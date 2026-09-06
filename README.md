@@ -2,6 +2,8 @@
 
 🌐 **線上使用：[選擇障礙專用 - 餐廳命運轉盤](https://cagoooo.github.io/food/)**
 
+> 📌 **目前版本：v2.1.3**（依據 `package.json`）
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
