@@ -2,13 +2,13 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { User, Lock, ChefHat, ArrowRight } from 'lucide-react'
-import { saveCurrentUser, verifyAdminPassword, logActivity, ActivityTypes } from '../services/firebase'
+import { saveCurrentUser, signInAdminWithGoogle, logActivity, ActivityTypes } from '../services/firebase'
 
 const LoginPage = ({ onLogin, onBack }) => {
     const [name, setName] = useState('')
     const [clickCount, setClickCount] = useState(0)
     const [showAdminLogin, setShowAdminLogin] = useState(false)
-    const [adminPassword, setAdminPassword] = useState('')
+    const [adminLoading, setAdminLoading] = useState(false)
     const [error, setError] = useState('')
 
     // 點擊 Logo 5 次觸發管理者登入
@@ -35,17 +35,26 @@ const LoginPage = ({ onLogin, onBack }) => {
         onLogin(user)
     }
 
-    // 管理者登入
-    const handleAdminLogin = () => {
-        if (verifyAdminPassword(adminPassword)) {
-            const user = { name: '管理員', isAdmin: true }
+    // 管理者登入：Google 帳號＋伺服器端名單確認
+    const handleAdminLogin = async () => {
+        setError('')
+        setAdminLoading(true)
+        try {
+            const user = await signInAdminWithGoogle()
             saveCurrentUser(user)
             logActivity(ActivityTypes.ADMIN_LOGIN, { success: true })
             onLogin(user)
-        } else {
+        } catch (err) {
             logActivity(ActivityTypes.ADMIN_LOGIN, { success: false })
-            setError('密碼錯誤')
-            setAdminPassword('')
+            if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+                setError('已取消登入')
+            } else if (err?.code === 'auth/popup-blocked') {
+                setError('瀏覽器擋住了登入視窗，請允許彈出視窗後再試一次')
+            } else {
+                setError(err?.message || '登入失敗，請再試一次')
+            }
+        } finally {
+            setAdminLoading(false)
         }
     }
 
@@ -140,20 +149,9 @@ const LoginPage = ({ onLogin, onBack }) => {
                                 <span>管理者登入</span>
                             </div>
 
-                            <div className="input-group">
-                                <Lock size={20} className="input-icon" />
-                                <input
-                                    type="password"
-                                    placeholder="請輸入管理者密碼"
-                                    value={adminPassword}
-                                    onChange={(e) => {
-                                        setAdminPassword(e.target.value)
-                                        setError('')
-                                    }}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-                                    className="glass-input"
-                                />
-                            </div>
+                            <p style={{ opacity: 0.75, fontSize: '0.9rem', lineHeight: 1.6, margin: '8px 0 4px' }}>
+                                請用管理員的 Google 帳號登入，只有名單內的帳號能管理菜單與使用 AI 辨識。
+                            </p>
 
                             {error && (
                                 <motion.p
@@ -170,7 +168,6 @@ const LoginPage = ({ onLogin, onBack }) => {
                                     className="btn-secondary"
                                     onClick={() => {
                                         setShowAdminLogin(false)
-                                        setAdminPassword('')
                                         setError('')
                                     }}
                                 >
@@ -179,11 +176,12 @@ const LoginPage = ({ onLogin, onBack }) => {
                                 <motion.button
                                     className="btn-luxury"
                                     onClick={handleAdminLogin}
+                                    disabled={adminLoading}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
                                     <Lock size={18} />
-                                    <span>登入</span>
+                                    <span>{adminLoading ? '確認中…' : '使用 Google 帳號登入'}</span>
                                 </motion.button>
                             </div>
                         </motion.div>

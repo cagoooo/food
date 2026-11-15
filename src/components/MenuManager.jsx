@@ -11,7 +11,8 @@ import {
     addMenuItem,
     updateMenuItem,
     deleteMenuItem,
-    addMenuItems
+    addMenuItems,
+    getAdminIdToken
 } from '../services/firebase'
 
 const MenuManager = () => {
@@ -354,10 +355,11 @@ const MenuManager = () => {
                     reader.readAsDataURL(file)
                 })
 
-                // 2. 呼叫 Firebase Cloud Function 代理（API Key 在伺服器端，前端不可見）
+                // 2. 呼叫 Firebase Cloud Function 代理（API Key 在伺服器端，前端不可見；需帶管理員登入憑證）
+                const idToken = await getAdminIdToken()
                 const response = await fetch(FUNCTION_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
                     body: JSON.stringify({
                         base64Image: base64,
                         mimeType: file.type || 'image/jpeg'

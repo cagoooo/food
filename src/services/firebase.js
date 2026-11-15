@@ -1,5 +1,6 @@
 // Firebase 初始化與資料庫操作 (使用 Cloud Firestore)
 import { initializeApp } from 'firebase/app'
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
 import {
     getFirestore,
     collection,
@@ -31,6 +32,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 // 使用 "food" 資料庫（非預設）
 const db = getFirestore(app, 'food')
+const auth = getAuth(app)
+
+// 確認管理員身分的雲端函式（名單在伺服器端，前端看不到）
+const isLocalhost = typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const CHECK_ADMIN_URL = isLocalhost
+    ? 'http://localhost:5001/vendor-5383c/asia-east1/checkAdmin'
+    : 'https://asia-east1-vendor-5383c.cloudfunctions.net/checkAdmin'
 
 // === 菜單操作 ===
 
@@ -210,15 +219,45 @@ export const getCurrentUser = () => {
     return user ? JSON.parse(user) : null
 }
 
-// 登出
+// 登出（管理員一併登出 Google 帳號）
 export const logoutUser = () => {
     sessionStorage.removeItem('orderUser')
+    signOut(auth).catch(() => {})
 }
 
-// 管理者密碼驗證
-export const verifyAdminPassword = (password) => {
-    return password === import.meta.env.VITE_ADMIN_PASSWORD
+// 管理員用 Google 帳號登入，並由伺服器確認是否在管理員名單內
+export const signInAdminWithGoogle = async () => {
+    const provider = new GoogleAuthProvider()
+    provider.setCustomParameters({ prompt: 'select_account' })
+    const result = await signInWithPopup(auth, provider)
+    const token = await result.user.getIdToken()
+    const response = await fetch(CHECK_ADMIN_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.isAdmin) {
+        await signOut(auth).catch(() => {})
+        throw new Error(data.error || '這個帳號沒有管理員權限')
+    }
+    return { name: '管理員', isAdmin: true, email: result.user.email }
 }
+
+// 取得目前管理員的登入憑證（呼叫需要管理員權限的雲端函式用）
+export const getAdminIdToken = async () => {
+    if (!auth.currentUser) {
+        throw new Error('請先用管理員 Google 帳號登入')
+    }
+    return auth.currentUser.getIdToken()
+}
+
+// 等 Firebase 還原登入狀態後，回傳是否仍有 Google 登入（重新整理頁面時用）
+export const waitForAuthUser = () => new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        unsubscribe()
+        resolve(firebaseUser)
+    })
+})
 
 // === 操作記錄 ===
 

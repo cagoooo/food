@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { initGoogleMaps, fetchNearbyRestaurants, fetchPlaceDetails, calculateTravelInfo } from './services/googleMaps'
-import { getCurrentUser, logoutUser } from './services/firebase'
+import { getCurrentUser, logoutUser, waitForAuthUser } from './services/firebase'
 import LoginPage from './components/LoginPage'
 
 // 使用 React.lazy 懶載入非核心組件
@@ -64,6 +64,15 @@ function App() {
     const savedUser = getCurrentUser()
     if (savedUser) {
       setUser(savedUser)
+      // 管理員身分要有有效的 Google 登入；沒有就降回未登入，避免只靠瀏覽器暫存冒充
+      if (savedUser.isAdmin) {
+        waitForAuthUser().then((firebaseUser) => {
+          if (!firebaseUser) {
+            logoutUser()
+            setUser(null)
+          }
+        })
+      }
     }
 
     // 處理離線佇列同步

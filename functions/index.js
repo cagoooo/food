@@ -5,16 +5,72 @@
 const { onRequest } = require('firebase-functions/v2/https')
 const { defineSecret } = require('firebase-functions/params')
 const fetch = require('node-fetch')
+const { initializeApp } = require('firebase-admin/app')
+const { getAuth } = require('firebase-admin/auth')
+
+initializeApp()
 
 // 從 Firebase Secret Manager 讀取金鑰（安全、不出現在代碼中）
 const geminiApiKey = defineSecret('GEMINI_API_KEY')
+// 管理員 Google 帳號名單（逗號分隔），放在 Secret Manager，不寫進公開原始碼
+const adminEmails = defineSecret('ADMIN_EMAILS')
+
+const ALLOWED_ORIGINS = ['https://cagoooo.github.io', 'http://localhost:5173', 'http://localhost:4173']
+
+/**
+ * 驗證請求帶的 Firebase 登入憑證（Authorization: Bearer <ID Token>），
+ * 並確認是名單內、信箱已驗證的 Google 帳號。回傳 { ok, status, error, email }。
+ */
+async function verifyAdmin(req) {
+    const header = req.get('Authorization') || ''
+    const match = header.match(/^Bearer (.+)$/)
+    if (!match) {
+        return { ok: false, status: 401, error: '請先用管理員 Google 帳號登入' }
+    }
+    let decoded
+    try {
+        decoded = await getAuth().verifyIdToken(match[1])
+    } catch (err) {
+        return { ok: false, status: 401, error: '登入已過期，請重新登入' }
+    }
+    const email = String(decoded.email || '').toLowerCase()
+    const allowed = String(adminEmails.value() || '')
+        .split(',')
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+    if (!email || decoded.email_verified !== true || !allowed.includes(email)) {
+        return { ok: false, status: 403, error: '這個帳號沒有管理員權限' }
+    }
+    return { ok: true, email }
+}
+
+// 前端登入後用來確認「這個 Google 帳號是不是管理員」
+exports.checkAdmin = onRequest(
+    {
+        region: 'asia-east1',
+        cors: ALLOWED_ORIGINS,
+        secrets: [adminEmails],
+        invoker: 'public',
+        maxInstances: 2
+    },
+    async (req, res) => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method Not Allowed' })
+        }
+        const result = await verifyAdmin(req)
+        if (!result.ok) {
+            return res.status(result.status).json({ isAdmin: false, error: result.error })
+        }
+        return res.json({ isAdmin: true })
+    }
+)
 
 exports.analyzeMenu = onRequest(
     {
         region: 'asia-east1',
-        cors: ['https://cagoooo.github.io', 'http://localhost:5173', 'http://localhost:4173'],
-        secrets: [geminiApiKey],
-        // 網頁直接呼叫、不帶登入身分，所以要開放給所有人；同時最多 3 台，避免被大量呼叫時費用暴衝
+        cors: ALLOWED_ORIGINS,
+        secrets: [geminiApiKey, adminEmails],
+        // 網址對外開放，但程式內會檢查管理員 Google 登入憑證；同時最多 3 台，避免費用暴衝
         invoker: 'public',
         maxInstances: 3
     },
@@ -22,6 +78,12 @@ exports.analyzeMenu = onRequest(
         // 只允許 POST
         if (req.method !== 'POST') {
             return res.status(405).json({ error: 'Method Not Allowed' })
+        }
+
+        // 只有名單內的管理員 Google 帳號可以使用 AI 辨識（會花 Gemini 費用）
+        const admin = await verifyAdmin(req)
+        if (!admin.ok) {
+            return res.status(admin.status).json({ error: admin.error })
         }
 
         const { base64Image, mimeType } = req.body
