@@ -13,7 +13,10 @@ exports.analyzeMenu = onRequest(
     {
         region: 'asia-east1',
         cors: ['https://cagoooo.github.io', 'http://localhost:5173', 'http://localhost:4173'],
-        secrets: [geminiApiKey]
+        secrets: [geminiApiKey],
+        // 網頁直接呼叫、不帶登入身分，所以要開放給所有人；同時最多 3 台，避免被大量呼叫時費用暴衝
+        invoker: 'public',
+        maxInstances: 3
     },
     async (req, res) => {
         // 只允許 POST
