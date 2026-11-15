@@ -7,6 +7,7 @@ const { defineSecret } = require('firebase-functions/params')
 const fetch = require('node-fetch')
 const { initializeApp } = require('firebase-admin/app')
 const { getAuth } = require('firebase-admin/auth')
+const { notifyGoogleChat, getClientIp, maskIp } = require('./notify-google-chat')
 
 initializeApp()
 
@@ -14,6 +15,11 @@ initializeApp()
 const geminiApiKey = defineSecret('GEMINI_API_KEY')
 // 管理員 Google 帳號名單（逗號分隔），放在 Secret Manager，不寫進公開原始碼
 const adminEmails = defineSecret('ADMIN_EMAILS')
+// Google Chat 通知網址：每次有人使用 AI 辨識都通知網站主人
+const googleChatWebhookUrl = defineSecret('GOOGLE_CHAT_WEBHOOK_URL')
+
+const SITE_NAME = '餐廳命運轉盤'
+const FEATURE_NAME = 'AI 菜單辨識'
 
 const ALLOWED_ORIGINS = ['https://cagoooo.github.io', 'http://localhost:5173', 'http://localhost:4173']
 
@@ -69,7 +75,7 @@ exports.analyzeMenu = onRequest(
     {
         region: 'asia-east1',
         cors: ALLOWED_ORIGINS,
-        secrets: [geminiApiKey, adminEmails],
+        secrets: [geminiApiKey, adminEmails, googleChatWebhookUrl],
         // 網址對外開放，但程式內會檢查管理員 Google 登入憑證；同時最多 3 台，避免費用暴衝
         invoker: 'public',
         maxInstances: 3
@@ -80,20 +86,49 @@ exports.analyzeMenu = onRequest(
             return res.status(405).json({ error: 'Method Not Allowed' })
         }
 
+        const startedAt = Date.now()
+        const clientIp = getClientIp(req)
+
         // 只有名單內的管理員 Google 帳號可以使用 AI 辨識（會花 Gemini 費用）
         const admin = await verifyAdmin(req)
         if (!admin.ok) {
+            // 被擋下也通知（同一 IP 每 5 分鐘最多 1 則）
+            await notifyGoogleChat({
+                status: 'blocked',
+                siteName: SITE_NAME,
+                feature: FEATURE_NAME,
+                durationMs: Date.now() - startedAt,
+                ip: clientIp,
+                fields: [
+                    { label: 'HTTP 狀態', value: String(admin.status) },
+                    { label: '原因', value: admin.error },
+                    { label: '來源 IP', value: maskIp(clientIp) }
+                ]
+            })
             return res.status(admin.status).json({ error: admin.error })
         }
 
-        const { base64Image, mimeType } = req.body
+        // 每次呼叫（成功或失敗）都通知網站主人
+        const report = (status, extra = {}) => notifyGoogleChat({
+            status,
+            siteName: SITE_NAME,
+            feature: FEATURE_NAME,
+            user: admin.email,
+            durationMs: Date.now() - startedAt,
+            ip: clientIp,
+            ...extra
+        })
+
+        const { base64Image, mimeType } = req.body || {}
 
         if (!base64Image) {
+            await report('failed', { error: '缺少 base64Image 參數' })
             return res.status(400).json({ error: '缺少 base64Image 參數' })
         }
 
         const apiKey = geminiApiKey.value()
         if (!apiKey) {
+            await report('failed', { error: 'Gemini API Key 未設定' })
             return res.status(500).json({ error: 'Gemini API Key 未設定' })
         }
 
@@ -145,8 +180,10 @@ exports.analyzeMenu = onRequest(
             )
 
             if (!response.ok) {
-                const errData = await response.json()
-                return res.status(502).json({ error: errData.error?.message || `Gemini API 錯誤 ${response.status}` })
+                const errData = await response.json().catch(() => ({}))
+                const message = errData.error?.message || `Gemini API 錯誤 ${response.status}`
+                await report('failed', { error: message })
+                return res.status(502).json({ error: message })
             }
 
             const data = await response.json()
@@ -159,13 +196,16 @@ exports.analyzeMenu = onRequest(
                 parsed = JSON.parse(cleanedText)
                 if (!Array.isArray(parsed)) parsed = []
             } catch {
+                await report('failed', { error: 'AI 回應不是有效的 JSON（已把原文回傳給前端）' })
                 return res.status(200).json({ items: [], rawText })
             }
 
+            await report('success', { fields: [{ label: '辨識品項數', value: `${parsed.length} 項` }] })
             return res.status(200).json({ items: parsed })
 
         } catch (err) {
             console.error('analyzeMenu error:', err)
+            await report('failed', { error: err.message })
             return res.status(500).json({ error: err.message })
         }
     }
