@@ -41,6 +41,7 @@ const LoginPage = ({ onLogin, onBack }) => {
         setAdminLoading(true)
         try {
             const user = await signInAdminWithGoogle()
+            if (!user) return // App 內建瀏覽器：已提醒，視為取消
             saveCurrentUser(user)
             logActivity(ActivityTypes.ADMIN_LOGIN, { success: true })
             onLogin(user)

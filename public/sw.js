@@ -1,4 +1,4 @@
-const CACHE_NAME = 'food-manager-cache-v3';
+const CACHE_NAME = 'food-manager-cache-v4';
 
 // 排除 Vite 內部資源與 HMR 請求
 const EXCLUDE_URLS = [

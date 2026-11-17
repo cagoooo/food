@@ -2,7 +2,7 @@
 
 本文件追蹤「美食管家」專案的開發進度與功能狀態。
 
-## 🚀 目前版本：v2.1.4 (Luminous Edition)
+## 🚀 目前版本：v2.1.5 (Luminous Edition)
 
 ---
 
@@ -29,6 +29,8 @@
 ---
 
 ### 📅 最近更新記錄
+- **2026-11-18 (v2.1.5)**:
+  - 管理員 Google 登入前先檢查 App 內建瀏覽器（LINE／FB 等），顯示提醒、不開登入視窗，避免 403 disallowed_useragent；Service Worker 快取名稱改為 `food-manager-cache-v4`。
 - **2026-11-17 (v2.1.4)**:
   - 頁尾署名改連阿凱老師教育科技創新專區（升版讓離線快取更新）：Service Worker 快取名稱改為 `food-manager-cache-v2`。
 - **2026-02-26 (v2.1.3)**:
